@@ -1,0 +1,27 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "python -m src.main",
+    "healthcheckPath": "/healthz",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "PORT": "8000",
+        "HOST": "0.0.0.0",
+        "LOG_LEVEL": "INFO",
+        "VOICE_THRESHOLD": "0.82",
+        "MAX_AUDIO_DURATION": "30",
+        "WEBSOCKET_TIMEOUT": "65",
+        "SUPABASE_URL": "https://uwkkunglqsccaskobeva.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3a2t1bmdscXNjY2Fza29iZXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNjgzNzEsImV4cCI6MjA2OTc0NDM3MX0.koxmEqBV-CQAgwBhmTrVzveUbWrCiq_JZHlD7Z9A4Mg"
+      }
+    }
+  }
+}

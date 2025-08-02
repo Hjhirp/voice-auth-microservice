@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     
     # Supabase configuration
-    supabase_url: str
-    supabase_anon_key: str
+    supabase_url: str = "https://uwkkunglqsccaskobeva.supabase.co"
+    supabase_anon_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3a2t1bmdscXNjY2Fza29iZXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNjgzNzEsImV4cCI6MjA2OTc0NDM3MX0.koxmEqBV-CQAgwBhmTrVzveUbWrCiq_JZHlD7Z9A4Mg"
     
     # External data API (removed until auth is successful)
     # data_url: str

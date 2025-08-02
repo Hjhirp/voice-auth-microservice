@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["python39", "ffmpeg"]
+
+[phases.install]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r requirements-prod.txt"
+]
+
+[phases.build]
+cmds = ["echo 'Build phase complete'"]
+
+[start]
+cmd = "python -m src.main"
