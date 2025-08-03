@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel, HttpUrl
 
-from ..clients.vapi_client import (
+from src.clients.vapi_client import (
     capture_audio_from_vapi,
     VAPIConnectionError,
     VAPIAudioError

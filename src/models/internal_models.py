@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
-from uuid import UUID
 
 import numpy as np
 
@@ -12,8 +11,7 @@ import numpy as np
 class User:
     """Internal user model for voice authentication."""
     
-    id: UUID
-    phone: str
+    phone: str  # Primary key - unique phone number
     embedding: np.ndarray  # 192-dimensional speaker embedding
     enrolled_at: datetime
     
@@ -27,7 +25,7 @@ class User:
 class AuthAttempt:
     """Internal model for authentication attempt logging."""
     
-    user_id: UUID
+    phone: str  # Phone number of the user attempting authentication
     success: bool
     score: Optional[float]
     created_at: datetime

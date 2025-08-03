@@ -6,7 +6,7 @@ from typing import Dict, Any
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel, HttpUrl
 
-from ..utils.audio_utils import (
+from src.utils.audio_utils import (
     process_audio_for_enrollment,
     AudioDownloadError,
     AudioProcessingError,

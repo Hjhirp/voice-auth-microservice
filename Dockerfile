@@ -1,34 +1,49 @@
-# Use Python 3.11 slim image
-FROM python:3.11-slim
+# Multi-stage build for optimized deployment
+# Stage 1: Build stage
+FROM python:3.11-slim as builder
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies for audio processing
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    build-essential \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+COPY requirements-railway.txt requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --user -r requirements.txt
+
+# Stage 2: Runtime stage
+FROM python:3.11-slim as runtime
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH=/home/app/.local/bin:$PATH \
+    PYTHONPATH=/app \
+    PORT=8000
+
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+RUN useradd --create-home --shell /bin/bash app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /app
 
-# Copy application code
-COPY . .
+COPY --chown=app:app . .
 
-# Create non-root user for security
-RUN useradd --create-home --shell /bin/bash app \
-    && chown -R app:app /app
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements-railway.txt
+
 USER app
 
-# Expose port
-EXPOSE 8000
+RUN mkdir -p /home/app/.cache/speechbrain
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/healthz')"
+EXPOSE $PORT
 
-# Start the application
-CMD ["python", "-m", "src.main"]
+# Start the application with uvicorn
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "$PORT", "--workers", "1", "--no-access-log"]

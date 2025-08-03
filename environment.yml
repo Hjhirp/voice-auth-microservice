@@ -1,0 +1,38 @@
+name: voice-auth-microservice
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pytorch
+  - torchaudio
+  - numpy
+  - cmake
+  - pkg-config
+  - pip
+  - pip:
+    - fastapi
+    - uvicorn[standard]
+    - pydantic[email]
+    - pydantic-settings
+    - httpx
+    - websockets
+    - supabase
+    - asyncpg
+    - speechbrain
+    - librosa
+    - ffmpeg-python
+    - structlog
+    - opentelemetry-api
+    - opentelemetry-sdk
+    - opentelemetry-instrumentation-fastapi
+    - opentelemetry-instrumentation-httpx
+    - pytest
+    - pytest-asyncio
+    - pytest-cov
+    - testcontainers
+    - black
+    - isort
+    - flake8
+    - mypy

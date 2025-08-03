@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: voice-auth-microservice
+    env: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /healthz
+    envVars:
+      - key: PORT
+        value: 8000

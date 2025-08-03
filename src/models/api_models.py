@@ -2,19 +2,18 @@
 
 from datetime import datetime
 from typing import Dict, List, Optional
-from uuid import UUID
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class EnrollmentRequest(BaseModel):
     """Request model for user enrollment endpoint."""
     
-    userId: UUID = Field(..., description="Unique identifier for the user")
-    phone: str = Field(..., min_length=10, max_length=20, description="User's phone number")
+    phone: str = Field(..., min_length=10, max_length=20, description="User's phone number (unique identifier)")
     audioUrl: str = Field(..., description="URL to download the enrollment audio file")
     
-    @validator('phone')
+    @field_validator('phone')
+    @classmethod
     def validate_phone(cls, v):
         """Validate phone number format."""
         # Remove common phone number characters
@@ -23,7 +22,8 @@ class EnrollmentRequest(BaseModel):
             raise ValueError('Phone number must contain at least 10 digits')
         return v
     
-    @validator('audioUrl')
+    @field_validator('audioUrl')
+    @classmethod
     def validate_audio_url(cls, v):
         """Validate audio URL format."""
         if not v.startswith(('http://', 'https://')):
@@ -49,10 +49,11 @@ class EnrollmentResponse(BaseModel):
 class VerificationRequest(BaseModel):
     """Request model for password verification endpoint."""
     
-    userId: UUID = Field(..., description="Unique identifier for the user to verify")
+    phone: str = Field(..., min_length=10, max_length=20, description="User's phone number (unique identifier)")
     listenUrl: str = Field(..., description="WebSocket URL for live audio capture")
     
-    @validator('listenUrl')
+    @field_validator('listenUrl')
+    @classmethod
     def validate_listen_url(cls, v):
         """Validate WebSocket URL format."""
         if not v.startswith(('ws://', 'wss://')):

@@ -16,6 +16,20 @@ from pydantic import BaseModel
 from src.config import settings
 from src.api.audio import router as audio_router
 from src.api.vapi import router as vapi_router
+from src.api.auth import router as auth_router
+from src.api.vapi_webhook import router as vapi_webhook_router
+from src.middleware import (
+    RequestLoggingMiddleware,
+    SecurityHeadersMiddleware,
+    MetricsMiddleware,
+    RateLimitMiddleware,
+    get_metrics
+)
+from src.observability import (
+    setup_observability,
+    instrument_fastapi_app,
+    TracingContextMiddleware
+)
 
 
 # Configure structured logging
@@ -55,6 +69,17 @@ async def lifespan(app: FastAPI):
                 port=settings.port, 
                 host=settings.host)
     
+    # Setup observability
+    setup_observability(
+        service_name="voice-auth-microservice",
+        service_version="1.0.0",
+        otlp_endpoint=None,  # Configure for production deployment
+        enable_console_export=True
+    )
+    
+    # Instrument FastAPI app
+    instrument_fastapi_app(app)
+    
     # Validate configuration
     try:
         # Test that all required environment variables are present
@@ -77,6 +102,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add middleware (order matters - last added is executed first)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(MetricsMiddleware)
+app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
+app.add_middleware(TracingContextMiddleware)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -87,43 +119,12 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(auth_router)
 app.include_router(audio_router)
 app.include_router(vapi_router)
+app.include_router(vapi_webhook_router)
 
 
-@app.middleware("http")
-async def logging_middleware(request: Request, call_next):
-    """Add correlation ID and request logging."""
-    correlation_id = request.headers.get("X-Call-ID", "unknown")
-    
-    # Add correlation ID to structured logging context
-    structlog.contextvars.clear_contextvars()
-    structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
-    
-    logger.info("Request received", 
-                method=request.method, 
-                url=str(request.url),
-                correlation_id=correlation_id)
-    
-    try:
-        response = await call_next(request)
-        logger.info("Request completed", 
-                    status_code=response.status_code,
-                    correlation_id=correlation_id)
-        return response
-    except Exception as e:
-        logger.error("Request failed", 
-                     error=str(e),
-                     correlation_id=correlation_id)
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": "Internal Server Error",
-                "message": "An unexpected error occurred",
-                "correlation_id": correlation_id,
-                "timestamp": datetime.utcnow().isoformat()
-            }
-        )
 
 
 @app.get("/healthz", response_model=HealthResponse)
@@ -133,6 +134,15 @@ async def health_check() -> HealthResponse:
         status="healthy",
         timestamp=datetime.utcnow()
     )
+
+
+@app.get("/metrics")
+async def metrics_endpoint():
+    """Application metrics endpoint."""
+    return {
+        "timestamp": datetime.utcnow().isoformat(),
+        "metrics": get_metrics()
+    }
 
 
 def handle_shutdown(signum, frame):

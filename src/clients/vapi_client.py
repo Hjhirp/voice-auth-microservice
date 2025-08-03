@@ -15,7 +15,7 @@ import websockets
 from websockets.exceptions import ConnectionClosed, WebSocketException
 import numpy as np
 
-from ..utils.audio_utils import pcm_to_wav
+from src.utils.audio_utils import pcm_to_wav
 
 logger = logging.getLogger(__name__)
 

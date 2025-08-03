@@ -2,12 +2,18 @@
 
 import os
 from typing import Optional
-from pydantic import validator
-from pydantic_settings import BaseSettings
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra="ignore"  # Ignore extra environment variables
+    )
     
     # Server configuration
     port: int = 8000
@@ -17,9 +23,6 @@ class Settings(BaseSettings):
     supabase_url: str = "https://uwkkunglqsccaskobeva.supabase.co"
     supabase_anon_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3a2t1bmdscXNjY2Fza29iZXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNjgzNzEsImV4cCI6MjA2OTc0NDM3MX0.koxmEqBV-CQAgwBhmTrVzveUbWrCiq_JZHlD7Z9A4Mg"
     
-    # External data API (removed until auth is successful)
-    # data_url: str
-    
     # Voice authentication settings
     voice_threshold: float = 0.82
     max_audio_duration: int = 30
@@ -28,33 +31,26 @@ class Settings(BaseSettings):
     # Logging configuration
     log_level: str = "INFO"
     
-    @validator('supabase_url')
+    @field_validator('supabase_url')
+    @classmethod
     def validate_supabase_url(cls, v):
         if not v:
             raise ValueError('SUPABASE_URL environment variable is required')
         return v
     
-    @validator('supabase_anon_key')
+    @field_validator('supabase_anon_key')
+    @classmethod
     def validate_supabase_anon_key(cls, v):
         if not v:
             raise ValueError('SUPABASE_ANON_KEY environment variable is required')
         return v
     
-    # @validator('data_url')
-    # def validate_data_url(cls, v):
-    #     if not v:
-    #         raise ValueError('DATA_URL environment variable is required')
-    #     return v
-    
-    @validator('voice_threshold')
+    @field_validator('voice_threshold')
+    @classmethod
     def validate_voice_threshold(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValueError('VOICE_THRESHOLD must be between 0.0 and 1.0')
         return v
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 
 # Global settings instance

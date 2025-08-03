@@ -37,25 +37,25 @@
     - Add connection lifecycle management and error handling
     - _Requirements: 3.2, 3.3_
 
-- [ ] 4. Integrate SpeechBrain ECAPA model
-  - [ ] 4.1 Create embedding service with model management
+- [-] 4. Integrate SpeechBrain ECAPA model
+  - [x] 4.1 Create embedding service with model management
     - Initialize SpeechBrain ECAPA-TDNN model with CPU-only configuration
     - Implement embedding generation function that returns 192-dimensional vectors
-    - Add model caching and optimization for Render deployment
+    - Add model caching and optimization for Railway deployment
     - _Requirements: 2.3, 5.4, 5.7_
   
-  - [ ] 4.2 Implement similarity computation and scoring
+  - [x] 4.2 Implement similarity computation and scoring
     - Create cosine similarity calculation function
     - Add threshold-based verification logic with configurable threshold
     - Implement score validation and comparison utilities
     - _Requirements: 3.5, 3.6_
 
-- [ ] 5. Implement external service integrations
-  - [ ] 5.1 Implement data store API client
-    - Create HTTP client for fetching user records from DATA_URL
-    - Add retry logic and error handling for external API calls
-    - Implement response parsing and validation
-    - _Requirements: 3.9, 3.10_
+- [x] 5. Implement external service integrations
+  - [x] 5.1 Data store API client - REMOVED (pipeline ends at authentication)
+    - ~~Create HTTP client for fetching user records from DATA_URL~~
+    - ~~Add retry logic and error handling for external API calls~~
+    - ~~Implement response parsing and validation~~
+    - _Requirements: 3.9, 3.10 - Not applicable (removed per user request)_
 
 - [ ] 6. Implement core business logic services
   - [ ] 6.1 Create authentication service for enrollment workflow
@@ -104,13 +104,13 @@
 
 - [ ] 9. Create deployment configuration
   - [ ] 9.1 Create Docker configuration
-    - Write multi-stage Dockerfile optimized for Render deployment
+    - Write multi-stage Dockerfile optimized for Railway deployment
     - Add .dockerignore file to exclude unnecessary files
     - Test Docker build and container startup locally
     - _Requirements: 5.1_
   
-  - [ ] 9.2 Create Render deployment configuration
-    - Write render.yaml with service configuration and environment variables
+  - [ ] 9.2 Create Railway deployment configuration
+    - Write railway.json with service configuration and environment variables
     - Add startup command configuration for uvicorn server
     - Configure health check endpoint and deployment settings
     - _Requirements: 5.3, 5.5, 7.5_
@@ -127,7 +127,7 @@
   - [ ] 11.2 Add API documentation and examples
     - Ensure OpenAPI documentation is complete and accurate
     - Add example requests and responses for all endpoints
-    - Create deployment guide specific to Render platform
+    - Create deployment guide specific to Railway platform
     - _Requirements: 7.1, 7.3_
 
 - [ ] 12. Final integration and testing

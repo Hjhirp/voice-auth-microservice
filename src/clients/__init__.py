@@ -1,13 +1,13 @@
 """Client modules for external service integrations."""
 
-from .supabase_client import (
+from src.clients.supabase_client import (
     SupabaseClient,
     UserRepository,
     AuthAttemptRepository,
     DatabaseManager
 )
 
-from .vapi_client import (
+from src.clients.vapi_client import (
     VAPIWebSocketClient,
     VAPIConnectionError,
     VAPIAudioError,

@@ -4,14 +4,13 @@ import asyncio
 import logging
 from datetime import datetime
 from typing import List, Optional
-from uuid import UUID
 
 import numpy as np
 from supabase import create_client, Client
 from postgrest.exceptions import APIError
 
-from ..config import settings
-from ..models.internal_models import User, AuthAttempt
+from src.config import settings
+from src.models.internal_models import User, AuthAttempt
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,6 @@ class UserRepository:
             embedding_list = user.embedding.tolist()
             
             user_data = {
-                "id": str(user.id),
                 "phone": user.phone,
                 "embedding": embedding_list,
                 "enrolled_at": user.enrolled_at.isoformat()
@@ -66,51 +64,24 @@ class UserRepository:
             # Use upsert to handle both create and update cases
             result = self.client.client.table("users").upsert(
                 user_data,
-                on_conflict="id"
+                on_conflict="phone"
             ).execute()
             
             if not result.data:
                 raise ValueError("Failed to create/update user")
             
-            logger.info(f"Successfully upserted user {user.id}")
+            logger.info(f"Successfully upserted user {user.phone}")
             return user
             
         except APIError as e:
-            logger.error(f"Database error creating/updating user {user.id}: {e}")
+            logger.error(f"Database error creating/updating user {user.phone}: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error creating/updating user {user.id}: {e}")
-            raise
-    
-    async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
-        """Retrieve user by ID."""
-        try:
-            result = self.client.client.table("users").select("*").eq("id", str(user_id)).execute()
-            
-            if not result.data:
-                return None
-            
-            user_data = result.data[0]
-            
-            # Convert embedding list back to numpy array
-            embedding = np.array(user_data["embedding"], dtype=np.float64)
-            
-            return User(
-                id=UUID(user_data["id"]),
-                phone=user_data["phone"],
-                embedding=embedding,
-                enrolled_at=datetime.fromisoformat(user_data["enrolled_at"].replace('Z', '+00:00'))
-            )
-            
-        except APIError as e:
-            logger.error(f"Database error retrieving user {user_id}: {e}")
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error retrieving user {user_id}: {e}")
+            logger.error(f"Unexpected error creating/updating user {user.phone}: {e}")
             raise
     
     async def get_user_by_phone(self, phone: str) -> Optional[User]:
-        """Retrieve user by phone number."""
+        """Retrieve user by phone number (primary identifier)."""
         try:
             result = self.client.client.table("users").select("*").eq("phone", phone).execute()
             
@@ -123,7 +94,6 @@ class UserRepository:
             embedding = np.array(user_data["embedding"], dtype=np.float64)
             
             return User(
-                id=UUID(user_data["id"]),
                 phone=user_data["phone"],
                 embedding=embedding,
                 enrolled_at=datetime.fromisoformat(user_data["enrolled_at"].replace('Z', '+00:00'))
@@ -136,18 +106,25 @@ class UserRepository:
             logger.error(f"Unexpected error retrieving user by phone {phone}: {e}")
             raise
     
-    async def delete_user(self, user_id: UUID) -> bool:
-        """Delete user by ID."""
+    async def delete_user(self, phone: str) -> bool:
+        """Delete user by phone number."""
         try:
-            result = self.client.client.table("users").delete().eq("id", str(user_id)).execute()
+            result = self.client.client.table("users").delete().eq("phone", phone).execute()
             
             success = len(result.data) > 0
             if success:
-                logger.info(f"Successfully deleted user {user_id}")
+                logger.info(f"Successfully deleted user {phone}")
             else:
-                logger.warning(f"User {user_id} not found for deletion")
+                logger.warning(f"User {phone} not found for deletion")
             
             return success
+    
+        except APIError as e:
+            logger.error(f"Database error deleting user {phone}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error deleting user {phone}: {e}")
+            raise
             
         except APIError as e:
             logger.error(f"Database error deleting user {user_id}: {e}")
@@ -168,7 +145,7 @@ class AuthAttemptRepository:
         """Create a new authentication attempt record."""
         try:
             attempt_data = {
-                "user_id": str(auth_attempt.user_id),
+                "phone": auth_attempt.phone,
                 "success": auth_attempt.success,
                 "score": auth_attempt.score,
                 "created_at": auth_attempt.created_at.isoformat()
@@ -183,23 +160,23 @@ class AuthAttemptRepository:
             created_data = result.data[0]
             auth_attempt.id = created_data["id"]
             
-            logger.info(f"Successfully created auth attempt {auth_attempt.id} for user {auth_attempt.user_id}")
+            logger.info(f"Successfully created auth attempt {auth_attempt.id} for user {auth_attempt.phone}")
             return auth_attempt
             
         except APIError as e:
-            logger.error(f"Database error creating auth attempt for user {auth_attempt.user_id}: {e}")
+            logger.error(f"Database error creating auth attempt for user {auth_attempt.phone}: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error creating auth attempt for user {auth_attempt.user_id}: {e}")
+            logger.error(f"Unexpected error creating auth attempt for user {auth_attempt.phone}: {e}")
             raise
     
-    async def get_auth_attempts_by_user(self, user_id: UUID, limit: int = 100) -> List[AuthAttempt]:
-        """Retrieve authentication attempts for a user."""
+    async def get_auth_attempts_by_phone(self, phone: str, limit: int = 100) -> List[AuthAttempt]:
+        """Retrieve authentication attempts for a user by phone number."""
         try:
             result = (
                 self.client.client.table("auth_attempts")
                 .select("*")
-                .eq("user_id", str(user_id))
+                .eq("phone", phone)
                 .order("created_at", desc=True)
                 .limit(limit)
                 .execute()
@@ -209,7 +186,7 @@ class AuthAttemptRepository:
             for attempt_data in result.data:
                 attempts.append(AuthAttempt(
                     id=attempt_data["id"],
-                    user_id=UUID(attempt_data["user_id"]),
+                    phone=attempt_data["phone"],
                     success=attempt_data["success"],
                     score=attempt_data["score"],
                     created_at=datetime.fromisoformat(attempt_data["created_at"].replace('Z', '+00:00'))
@@ -218,14 +195,14 @@ class AuthAttemptRepository:
             return attempts
             
         except APIError as e:
-            logger.error(f"Database error retrieving auth attempts for user {user_id}: {e}")
+            logger.error(f"Database error retrieving auth attempts for user {phone}: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error retrieving auth attempts for user {user_id}: {e}")
+            logger.error(f"Unexpected error retrieving auth attempts for user {phone}: {e}")
             raise
     
-    async def get_recent_failed_attempts(self, user_id: UUID, minutes: int = 60) -> int:
-        """Get count of recent failed authentication attempts for a user."""
+    async def get_recent_failed_attempts(self, phone: str, minutes: int = 60) -> int:
+        """Get count of recent failed authentication attempts for a user by phone."""
         try:
             # Calculate timestamp for X minutes ago
             from datetime import timedelta
@@ -234,7 +211,7 @@ class AuthAttemptRepository:
             result = (
                 self.client.client.table("auth_attempts")
                 .select("count", count="exact")
-                .eq("user_id", str(user_id))
+                .eq("phone", phone)
                 .eq("success", False)
                 .gte("created_at", cutoff_time.isoformat())
                 .execute()
@@ -243,10 +220,10 @@ class AuthAttemptRepository:
             return result.count or 0
             
         except APIError as e:
-            logger.error(f"Database error counting failed attempts for user {user_id}: {e}")
+            logger.error(f"Database error counting failed attempts for user {phone}: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error counting failed attempts for user {user_id}: {e}")
+            logger.error(f"Unexpected error counting failed attempts for user {phone}: {e}")
             raise
 
 

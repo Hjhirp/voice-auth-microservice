@@ -46,8 +46,7 @@ This feature implements a production-ready Python voice authentication microserv
 6. IF similarity score is below threshold (default 0.82) THEN it SHALL respond immediately with failure JSON
 7. IF similarity score meets threshold THEN it SHALL initiate Duo push notification asynchronously
 8. WHEN Duo push is sent THEN it SHALL poll for approval with maximum 60 second timeout
-9. IF Duo approval succeeds THEN it SHALL fetch user records from DATA_URL/records/{userId}
-10. WHEN records are fetched THEN it SHALL respond with success JSON containing records for VAPI to speak
+9. IF Duo approval succeeds THEN it SHALL respond with success JSON indicating authentication success
 11. IF any step fails THEN it SHALL log the auth attempt in auth_attempts table with success=false
 
 ### Requirement 4
@@ -69,7 +68,7 @@ This feature implements a production-ready Python voice authentication microserv
 #### Acceptance Criteria
 
 1. WHEN Docker image is built THEN it SHALL use multi-stage build to minimize image size and comply with Render's deployment requirements
-2. WHEN container starts THEN it SHALL read configuration from environment variables: SUPABASE_URL, SUPABASE_SERVICE_KEY, DUO_HOST, DUO_IKEY, DUO_SKEY, DATA_URL, VOICE_THRESHOLD, PORT
+2. WHEN container starts THEN it SHALL read configuration from environment variables: SUPABASE_URL, SUPABASE_SERVICE_KEY, DUO_HOST, DUO_IKEY, DUO_SKEY, VOICE_THRESHOLD, PORT
 3. WHEN deployed on Render THEN it SHALL bind to 0.0.0.0 and use PORT environment variable (default 8000)
 4. WHEN SpeechBrain models are loaded THEN it SHALL use CPU-only mode for compatibility with Render's infrastructure
 5. WHEN deployed THEN it SHALL respond to health checks at /healthz endpoint
