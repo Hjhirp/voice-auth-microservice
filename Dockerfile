@@ -46,4 +46,4 @@ RUN mkdir -p /home/app/.cache/speechbrain
 EXPOSE $PORT
 
 # Start the application with uvicorn
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "$PORT", "--workers", "1", "--no-access-log"]
+CMD sh -c "uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers 1 --no-access-log"

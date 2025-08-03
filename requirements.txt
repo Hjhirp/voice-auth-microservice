@@ -4,6 +4,11 @@ uvicorn[standard]
 pydantic[email]
 pydantic-settings
 
+# Streamlit dashboard
+streamlit
+pandas
+requests
+
 # HTTP client and WebSocket support
 httpx
 websockets

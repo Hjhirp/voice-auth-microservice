@@ -385,6 +385,7 @@ def show_auth_history():
                     st.info("No authentication attempts found for this user.")
             else:
                 error = result["error"]
+                st.error(f"❌ Error: {error.get('message', 'Failed to fetch history')}")
 
 if __name__ == "__main__":
     main()
