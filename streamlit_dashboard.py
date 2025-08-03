@@ -9,9 +9,11 @@ import json
 from datetime import datetime
 import time
 from typing import Dict, List, Optional
+import os
+import uuid
 
 # Configuration
-API_BASE_URL = "https://voiceauth-production.up.railway.app/api/v1"
+API_BASE_URL = os.getenv("API_BASE_URL", "https://voice-auth-microservice.onrender.com/api/v1")
 
 st.set_page_config(
     page_title="Voice Authentication Dashboard",
@@ -123,8 +125,7 @@ def main():
         "System Status",
         "User Enrollment", 
         "User Management",
-        "Authentication History",
-        "Analytics"
+        "Authentication History"
     ])
     
     # Check service health
@@ -145,42 +146,20 @@ def main():
         show_user_management()
     elif page == "Authentication History":
         show_auth_history()
-    elif page == "Analytics":
-        show_analytics()
 
 def show_system_status(health_status: Dict):
     """Display system status page"""
     st.header("🔍 System Status")
     
-    col1, col2, col3 = st.columns(3)
+    # Remove metrics, just show status as text
+    overall_status = health_status.get("status", "unknown")
+    st.write(f"Overall Status: {overall_status}")
     
-    with col1:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        overall_status = health_status.get("status", "unknown")
-        if overall_status == "healthy":
-            st.metric("Overall Status", "🟢 Healthy")
-        else:
-            st.metric("Overall Status", "🔴 Unhealthy")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        components = health_status.get("components", {})
-        db_status = components.get("database", {}).get("status", "unknown")
-        if db_status == "healthy":
-            st.metric("Database", "🟢 Connected")
-        else:
-            st.metric("Database", "🔴 Disconnected")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        ai_status = components.get("embedding_service", {}).get("status", "unknown")
-        if ai_status == "healthy":
-            st.metric("AI Model", "🟢 Loaded")
-        else:
-            st.metric("AI Model", "🔴 Not Available")
-        st.markdown('</div>', unsafe_allow_html=True)
+    components = health_status.get("components", {})
+    db_status = components.get("database", {}).get("status", "unknown")
+    st.write(f"Database: {db_status}")
+    ai_status = components.get("embedding_service", {}).get("status", "unknown")
+    st.write(f"AI Model: {ai_status}")
     
     # Detailed status
     st.subheader("Detailed Information")
@@ -198,7 +177,7 @@ def show_user_enrollment():
     st.header("👤 User Enrollment")
     
     st.markdown("""
-    **Instructions:**
+https://voice-auth-microservice.onrender.com    **Instructions:**
     1. Generate or enter a unique User ID
     2. Enter the user's phone number in international format
     3. Provide a publicly accessible audio URL (WAV format recommended)
@@ -406,42 +385,6 @@ def show_auth_history():
                     st.info("No authentication attempts found for this user.")
             else:
                 error = result["error"]
-                st.error(f"❌ Error: {error.get('message', 'Failed to fetch history')}")
-
-def show_analytics():
-    """Display analytics page"""
-    st.header("📈 Analytics")
-    
-    st.info("⚠️ Analytics features require additional backend implementation. Showing mockup interface.")
-    
-    # Mock analytics data
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Total Users", "1,234", delta="12")
-    with col2:
-        st.metric("Success Rate", "94.2%", delta="0.5%")
-    with col3:
-        st.metric("Today's Verifications", "67", delta="5")
-    with col4:
-        st.metric("Avg Response Time", "2.3s", delta="-0.1s")
-    
-    # Mock charts
-    st.subheader("Enrollment Trends")
-    chart_data = pd.DataFrame({
-        'Date': pd.date_range('2024-01-01', periods=30, freq='D'),
-        'Enrollments': [12, 19, 15, 25, 22, 18, 28, 31, 24, 19, 
-                       16, 22, 28, 35, 29, 21, 17, 23, 30, 26,
-                       20, 24, 32, 28, 25, 19, 27, 33, 29, 22]
-    })
-    st.line_chart(chart_data.set_index('Date'))
-    
-    st.subheader("Verification Results")
-    verification_data = pd.DataFrame({
-        'Status': ['Successful', 'Failed', 'Error'],
-        'Count': [425, 28, 7]
-    })
-    st.bar_chart(verification_data.set_index('Status'))
 
 if __name__ == "__main__":
     main()

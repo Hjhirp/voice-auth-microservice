@@ -432,7 +432,7 @@ mypy src/
 
 ## License
 
-[Your License Here]
+MIT
 
 ## Support
 
@@ -453,3 +453,45 @@ For issues and questions:
 - [ ] Error handling tested
 - [ ] Performance validated
 - [ ] Security headers verified
+
+---
+
+## Streamlit Dashboard (Frontend)
+
+A modern dashboard for user enrollment, management, and analytics.
+
+### Local Development
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Run the dashboard:
+   ```bash
+   streamlit run streamlit_dashboard.py
+   ```
+
+### Deploying on Render (No Docker)
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `streamlit run streamlit_dashboard.py --server.port $PORT --server.address 0.0.0.0`
+- Set environment variables in the Render dashboard (copy from `.env`).
+
+### Deploying on Render (With Docker)
+- Use the provided `Dockerfile` and `render.yaml`.
+
+### Environment Variables
+- `API_BASE_URL` (for the dashboard, defaults to your Render backend)
+- All backend variables (see above)
+
+---
+
+## Project Structure
+```
+├── src/                  # FastAPI backend code
+├── streamlit_dashboard.py # Streamlit frontend
+├── requirements.txt      # Python dependencies
+├── requirements-railway.txt # (alt) Python dependencies for cloud
+├── Dockerfile            # (optional) For Docker deployment
+├── render.yaml           # (optional) For Render Docker deployment
+├── .env                  # Environment variables
+```
