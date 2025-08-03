@@ -22,7 +22,7 @@ FROM python:3.11-slim as runtime
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH=/home/app/.local/bin:$PATH \
-    PYTHONPATH=/app \
+    PYTHONPATH=/app:/app/src \
     PORT=8000
 
 RUN apt-get update && apt-get install -y \
@@ -46,4 +46,4 @@ RUN mkdir -p /home/app/.cache/speechbrain
 EXPOSE $PORT
 
 # Start the application with uvicorn
-CMD sh -c "uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers 1 --no-access-log"
+CMD sh -c "cd /app && python -m uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers 1 --no-access-log"
